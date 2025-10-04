@@ -51,6 +51,16 @@ function App() {
       .catch(console.error)
   }, [])
 
+  //auto-install default voice
+  React.useEffect(() => {
+    if (!state.voiceList) return
+    const alanVoice = state.voiceList.find(v => v.key === 'en_GB-alan-medium')
+    if (alanVoice && alanVoice.installState === 'not-installed') {
+      appendActivityLog('Auto-installing default voice: alan [medium]...')
+      onInstall(alanVoice, () => {})
+    }
+  }, [state.voiceList])
+
   //advertise voices
   React.useEffect(() => {
     if (advertised) advertiseVoices(advertised)
