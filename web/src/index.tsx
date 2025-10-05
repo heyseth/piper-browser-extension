@@ -107,6 +107,30 @@ function App() {
     })
   })
 
+  //expose API to console
+  React.useEffect(() => {
+    (window as any).piper = {
+      speak(text: string, voiceName?: string) {
+        const voice = voiceName || (advertised && advertised.length > 0 ? advertised[0].voiceName : '')
+        if (!voice) {
+          console.error('No voices available')
+          return
+        }
+        onSpeak({utterance: text, voiceName: voice}, {
+          send({method, args}: {method: string, args?: Record<string, unknown>}) {
+            console.log('Piper event:', method, args)
+          }
+        })
+      },
+      stop: onStop,
+      pause: onPause,
+      resume: onResume,
+      listVoices() {
+        return advertised?.map(v => v.voiceName) || []
+      }
+    }
+  })
+
   //auto-scroll activity log
   React.useEffect(() => {
     refs.activityLog.current.scrollTop = refs.activityLog.current.scrollHeight
