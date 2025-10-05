@@ -30,7 +30,6 @@ function App() {
     }
   })
   const refs = {
-    activityLog: React.useRef<HTMLTextAreaElement>(null!),
   }
   const installed = React.useMemo(() => state.voiceList?.filter(x => x.installState == "installed") ?? [], [state.voiceList])
   const notInstalled = React.useMemo(() => state.voiceList?.filter(x => x.installState != "installed") ?? [], [state.voiceList])
@@ -131,12 +130,6 @@ function App() {
     }
   })
 
-  //auto-scroll activity log
-  React.useEffect(() => {
-    refs.activityLog.current.scrollTop = refs.activityLog.current.scrollHeight
-  }, [
-    state.activityLog
-  ])
 
 
   return (
@@ -186,11 +179,6 @@ function App() {
           </form>
         </div>
       }
-
-      <div>
-        <h2 className="text-muted">Activity Log</h2>
-        <textarea className="form-control" disabled rows={4} ref={refs.activityLog} value={state.activityLog} />
-      </div>
 
       <div>
         <h2 className="text-muted">Installed</h2>
