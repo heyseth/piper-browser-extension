@@ -364,6 +364,7 @@ function App() {
   }
 
   function appendActivityLog(text: string) {
+    console.log(text)
     stateUpdater(draft => {
       draft.activityLog += text + '\n'
     })
