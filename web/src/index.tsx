@@ -51,33 +51,38 @@ function App() {
       .catch(console.error)
   }, [])
 
-  //auto-install default voice
+  //auto-install and load default voice
   React.useEffect(() => {
     if (!state.voiceList) return
     const alanVoice = state.voiceList.find(v => v.key === 'en_GB-alan-medium')
-    if (alanVoice && alanVoice.installState === 'not-installed') {
+    if (!alanVoice) return
+
+    const loadVoiceIntoMemory = () => {
+      appendActivityLog('Loading alan [medium] into memory...')
+      const synth = makeSynthesizer(alanVoice.key)
+      synthesizers.set(alanVoice.key, synth)
+
+      stateUpdater(draft => {
+        draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loading"
+      })
+
+      synth.readyPromise
+        .then(() => {
+          stateUpdater(draft => {
+            draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loaded"
+          })
+          appendActivityLog('alan [medium] is ready to use')
+        })
+        .catch(reportError)
+    }
+
+    if (alanVoice.installState === 'not-installed') {
       appendActivityLog('Auto-installing default voice: alan [medium]...')
       onInstall(alanVoice, () => {})
-        .then(() => {
-          // Load the voice into memory after installation
-          appendActivityLog('Loading alan [medium] into memory...')
-          const synth = makeSynthesizer(alanVoice.key)
-          synthesizers.set(alanVoice.key, synth)
-
-          stateUpdater(draft => {
-            draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loading"
-          })
-
-          synth.readyPromise
-            .then(() => {
-              stateUpdater(draft => {
-                draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loaded"
-              })
-              appendActivityLog('alan [medium] is ready to use')
-            })
-            .catch(reportError)
-        })
+        .then(loadVoiceIntoMemory)
         .catch(() => {}) // Error already reported by onInstall
+    } else if (alanVoice.installState === 'installed' && alanVoice.loadState === 'not-loaded') {
+      loadVoiceIntoMemory()
     }
   }, [state.voiceList])
 
