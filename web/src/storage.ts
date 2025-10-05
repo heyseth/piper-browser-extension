@@ -21,13 +21,10 @@ export async function getFile(name: string, fetchFile?: () => Promise<Blob>): Pr
   catch (err) {
     if (fetchFile && err instanceof DOMException && err.name == "NotFoundError") {
       const blob = await fetchFile()
-      folder.getFileHandle(name, {create: true})
-        .then(async file => {
-          const writable = await file.createWritable()
-          await writable.write(blob)
-          await writable.close()
-        })
-        .catch(console.error)
+      const file = await folder.getFileHandle(name, {create: true})
+      const writable = await file.createWritable()
+      await writable.write(blob)
+      await writable.close()
       return blob
     }
     else {

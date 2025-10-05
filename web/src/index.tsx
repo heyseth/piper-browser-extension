@@ -58,6 +58,26 @@ function App() {
     if (alanVoice && alanVoice.installState === 'not-installed') {
       appendActivityLog('Auto-installing default voice: alan [medium]...')
       onInstall(alanVoice, () => {})
+        .then(() => {
+          // Load the voice into memory after installation
+          appendActivityLog('Loading alan [medium] into memory...')
+          const synth = makeSynthesizer(alanVoice.key)
+          synthesizers.set(alanVoice.key, synth)
+
+          stateUpdater(draft => {
+            draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loading"
+          })
+
+          synth.readyPromise
+            .then(() => {
+              stateUpdater(draft => {
+                draft.voiceList!.find(x => x.key === alanVoice.key)!.loadState = "loaded"
+              })
+              appendActivityLog('alan [medium] is ready to use')
+            })
+            .catch(reportError)
+        })
+        .catch(() => {}) // Error already reported by onInstall
     }
   }, [state.voiceList])
 
@@ -104,9 +124,10 @@ function App() {
             <textarea className="form-control" rows={3} name="text" defaultValue={config.testSpeech} />
             <select className="form-control mt-3" name="voice">
               <option value="">Select a voice</option>
-              {advertised?.map(voice =>
-                <option key={voice.voiceName} value={voice.voiceName}>{voice.voiceName}</option>
-              )}
+              {advertised?.map(voice => {
+                const isAlan = voice.voiceName.includes('alan-medium')
+                return <option key={voice.voiceName} value={voice.voiceName} selected={isAlan}>{voice.voiceName}</option>
+              })}
             </select>
             <div className="d-flex align-items-center mt-3">
               {state.test.current == null &&
